@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Image, Flex, Group, Button } from "@mantine/core";
 import type { User } from "@/components/types/user";
+import { getDiscordUser } from "@/components/lib/system/discordClient";
 
 export default function Home() {
   const [user, setUser] = useState<User>({
@@ -15,8 +16,7 @@ export default function Home() {
 
   async function fetchUser() {
     try {
-      const res = await fetch("/api/user" + window.location.search);
-      const data: User = await res.json();
+      const data = await getDiscordUser();
       setUser(data);
       setDebug(JSON.stringify(data, null, 2));
     } catch (err) {
