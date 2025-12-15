@@ -1,8 +1,8 @@
-"use client"
+'use client'
+
 import { DiscordSDK } from "@discord/embedded-app-sdk";
 import { useState, useEffect } from "react";
-import { Image, Container, Space, Flex, Group } from '@mantine/core';
-import { channel } from "diagnostics_channel";
+import { Container, Image } from "@chakra-ui/react";
 
 export default function Home() {
   const [channelName, setChannelName] = useState("Unknown");
@@ -10,17 +10,6 @@ export default function Home() {
   const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
   const [username, setUsername] = useState("Unknown");
   const [isDiscordActivity, setIsDiscordActivity] = useState(false);
-
-  const [User, setUser] = useState({
-    username: username,
-    avatarUrl: userAvatarUrl,
-    channelName: channelName,
-    guildIconUrl: guildIconUrl
-  });
-
-  if (channelName !== "Unknown") {
-    console.log("Channel Name:", channelName);
-  }
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -92,42 +81,24 @@ export default function Home() {
   }, []);
 
   return (
+    <Container>
+      <Image src="/rocket.png" alt="Next.js logo" width={100} height={20} />
 
-
-    <Group pl={40} pt={20} bg={"#a5d8ff"}>
-      {isDiscordActivity ?
-        (
-
-          <Flex direction="row" align="center"
-            justify="flex-start" gap={'lg'}>
-            <Image src="/rocket.png" alt="Next.js logo" w={100} h={100} />
-            <p>Activity Channel: {channelName}</p>
-            <Space />
-            <p>Server:</p>
-            {guildIconUrl && (
-              <Image src={guildIconUrl} alt="Guild icon" w={100} h={100} />
-            )}
-            <Space />
-            <Space />
-            {User.guildIconUrl}
-            <p>User: {username}</p>
-            {userAvatarUrl && (
-              <Image src={userAvatarUrl} alt="User avatar" w={100} h={100} />
-            )}</Flex >
-
-        ) : (
-          <>
-            <Image src="/rocket.png" alt="Next.js logo" h={160} w={160} />
-            <p>Welcome to the normal webpage version 🚀</p>
-            <p>Jacob Rocks 👾</p>
-          </>
-        )
-      }
-    </Group >
-
-
-
-
-
+      {isDiscordActivity ? (
+        <>
+          <p>Activity Channel: {channelName}</p>
+          <p>Guild:</p>
+          {guildIconUrl && (
+            <Image src={guildIconUrl} alt="Guild icon" width={32} height={32} />
+          )}
+          <p>User: {username}</p>
+          {userAvatarUrl && (
+            <Image src={userAvatarUrl} alt="User avatar" width={32} height={32} />
+          )}
+        </>
+      ) : (
+        <p>Welcome to the normal webpage version 🚀</p>
+      )}
+    </Container>
   );
 }
