@@ -77,7 +77,8 @@ export default function Home() {
 
         if (discordSdk.channelId) {
           const channel = await discordSdk.commands.getChannel({ channel_id: discordSdk.channelId });
-          if (channel?.name) setUser(prev => ({
+
+          setUser(prev => ({
             ...prev, channelName: channel.name
           }));
         }
@@ -88,12 +89,10 @@ export default function Home() {
         const guilds = await guildRes.json();
 
         const currentGuild = guilds.find((g: any) => g.id === discordSdk.guildId);
-        if (currentGuild?.icon) {
-          setUser(prev => ({
-            ...prev, guildIconUrl: `https://cdn.discordapp.com/icons/${currentGuild.id}/${currentGuild.icon}.png`
-          }));
 
-        }
+        setUser(prev => ({
+          ...prev, guildIconUrl: `https://cdn.discordapp.com/icons/${currentGuild.id}/${currentGuild.icon}.png`
+        }));
       } catch (err) {
         console.error("Discord SDK setup failed:", err);
       }
