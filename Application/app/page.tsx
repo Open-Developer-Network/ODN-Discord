@@ -14,14 +14,18 @@ export default function Home() {
     guildIconUrl: "Unknown",
     isDiscordActivity: false,
   });
-
+  const [debug, setDebug] = useState<string>("");
   async function fetchUser() {
     try {
       const res = await fetch("/api/user" + window.location.search);
       const data: User = await res.json();
       setUser(data);
-    } catch (error) {
-      console.error("Error fetching user data:", error);
+      setDebug(JSON.stringify(data, null, 2)); // show raw response
+
+    } catch (err) {
+      console.error("Error fetching user data:", err);
+      setDebug("Error: " + (err as Error).message);
+
     }
   }
 
@@ -61,11 +65,9 @@ export default function Home() {
           </>
         )
       }
+      <pre style={{ fontSize: "12px", background: "#eee", padding: "8px" }}>
+        {debug}
+      </pre>
     </Group >
-
-
-
-
-
   );
 }
