@@ -6,10 +6,10 @@ import { channel } from "diagnostics_channel";
 
 export default function Home() {
   type User = {
-    username: string;
-    avatarUrl: string | null;
+    username: string | null | undefined;
+    avatarUrl: string | null | undefined;
     channelName: string | null | undefined;
-    guildIconUrl: string | null;
+    guildIconUrl: string | null | undefined;
   };
 
   const [User, setUser] = useState<User>({
