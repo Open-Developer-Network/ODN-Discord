@@ -8,7 +8,7 @@ export default function Home() {
   type User = {
     username: string;
     avatarUrl: string | null;
-    channelName: string | null;
+    channelName: string | null | undefined;
     guildIconUrl: string | null;
   };
 
