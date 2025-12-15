@@ -3,41 +3,30 @@ import { DiscordSDK } from "@discord/embedded-app-sdk";
 import { useState, useEffect } from "react";
 import { Image, Container, Space, Flex, Group, Button } from '@mantine/core';
 import { channel } from "diagnostics_channel";
-
+import type { User } from "@/components/types/user";
 export default function Home() {
-  type User = {
-    username: string | null | undefined;
-    avatarUrl: string | null | undefined;
-    channelName: string | null | undefined;
-    guildIconUrl: string | null | undefined;
-  };
+
 
   const [User, setUser] = useState<User>({
     username: "Unknown",
     avatarUrl: "Unknown",
     channelName: "Unknown",
-    guildIconUrl: "Unknown"
+    guildIconUrl: "Unknown",
+    isDiscordActivity: false,
   });
-
-  const [isDiscordActivity, setIsDiscordActivity] = useState(false);
 
   async function fetchUser() {
     try {
       const response = await fetch('/api/user');
       const data = await response.json();
-      setUser({
-        username: data.username,
-        avatarUrl: data.avatarUrl,
-        channelName: data.channelName,
-        guildIconUrl: data.guildIconUrl
-      });
+      setUser(data);
     } catch (error) {
       console.error("Error fetching user data:", error);
     }
   }
 
 
-  const { username, avatarUrl, channelName, guildIconUrl } = User;
+  const { username, avatarUrl, channelName, guildIconUrl, isDiscordActivity } = User;
   return (
 
 
@@ -60,7 +49,7 @@ export default function Home() {
             {avatarUrl && (
               <Image src={avatarUrl} alt="User avatar" w={100} h={100} />
             )}
-            <Button onClick={fetchUser()}></Button>
+            <Button onClick={fetchUser}></Button>
           </Flex >
 
         ) : (
