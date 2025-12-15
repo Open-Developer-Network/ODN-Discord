@@ -17,8 +17,8 @@ export default function Home() {
 
   async function fetchUser() {
     try {
-      const response = await fetch('/api/user');
-      const data = await response.json();
+      const res = await fetch("/api/user" + window.location.search);
+      const data: User = await res.json();
       setUser(data);
     } catch (error) {
       console.error("Error fetching user data:", error);
