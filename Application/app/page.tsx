@@ -1,15 +1,31 @@
-'use client'
-
+"use client"
 import { DiscordSDK } from "@discord/embedded-app-sdk";
 import { useState, useEffect } from "react";
-import { Container, Image } from "@chakra-ui/react";
+import { Image, Container, Space, Flex, Group } from '@mantine/core';
+import { channel } from "diagnostics_channel";
 
 export default function Home() {
-  const [channelName, setChannelName] = useState("Unknown");
-  const [guildIconUrl, setGuildIconUrl] = useState<string | null>(null);
-  const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
-  const [username, setUsername] = useState("Unknown");
+  type User = {
+    username: string;
+    avatarUrl: string | null;
+    channelName: string | null;
+    guildIconUrl: string | null;
+  };
+
+  const [User, setUser] = useState<User>({
+    username: "Unknown",
+    avatarUrl: null,
+    channelName: "Unknown",
+    guildIconUrl: null
+  });
+
   const [isDiscordActivity, setIsDiscordActivity] = useState(false);
+
+
+
+  if (User.channelName !== "Unknown") {
+    console.log("Channel Name:", User.channelName);
+  }
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -51,14 +67,19 @@ export default function Home() {
         const auth = await discordSdk.commands.authenticate({ access_token: data.access_token });
         if (!auth) throw new Error("Authenticate command failed");
 
-        setUsername(auth.user.username);
-        setUserAvatarUrl(
-          `https://cdn.discordapp.com/avatars/${auth.user.id}/${auth.user.avatar}.png`
-        );
+        setUser(prev => ({
+          ...prev,
+          username: auth.user.username,
+          avatarUrl: `https://cdn.discordapp.com/avatars/${auth.user.id}/${auth.user.avatar}.png`,
+
+        }));
+
 
         if (discordSdk.channelId) {
           const channel = await discordSdk.commands.getChannel({ channel_id: discordSdk.channelId });
-          if (channel?.name) setChannelName(channel.name);
+          if (channel?.name) setUser(prev => ({
+            ...prev, channelName: channel.name
+          }));
         }
 
         const guildRes = await fetch("https://discord.com/api/users/@me/guilds", {
@@ -68,9 +89,10 @@ export default function Home() {
 
         const currentGuild = guilds.find((g: any) => g.id === discordSdk.guildId);
         if (currentGuild?.icon) {
-          setGuildIconUrl(
-            `https://cdn.discordapp.com/icons/${currentGuild.id}/${currentGuild.icon}.png`
-          );
+          setUser(prev => ({
+            ...prev, guildIconUrl: `https://cdn.discordapp.com/icons/${currentGuild.id}/${currentGuild.icon}.png`
+          }));
+
         }
       } catch (err) {
         console.error("Discord SDK setup failed:", err);
@@ -80,25 +102,43 @@ export default function Home() {
     setupDiscordSdk();
   }, []);
 
+  const { username, avatarUrl, channelName, guildIconUrl } = User;
   return (
-    <Container>
-      <Image src="/rocket.png" alt="Next.js logo" width={100} height={20} />
 
-      {isDiscordActivity ? (
-        <>
-          <p>Activity Channel: {channelName}</p>
-          <p>Guild:</p>
-          {guildIconUrl && (
-            <Image src={guildIconUrl} alt="Guild icon" width={32} height={32} />
-          )}
-          <p>User: {username}</p>
-          {userAvatarUrl && (
-            <Image src={userAvatarUrl} alt="User avatar" width={32} height={32} />
-          )}
-        </>
-      ) : (
-        <p>Welcome to the normal webpage version 🚀</p>
-      )}
-    </Container>
+
+    <Group pl={40} pt={20} bg={"#a5d8ff"}>
+      {isDiscordActivity ?
+        (
+
+          <Flex direction="row" align="center"
+            justify="flex-start" gap={'lg'}>
+            <Image src="/rocket.png" alt="Next.js logo" w={100} h={100} />
+            <p>Activity Channel: {channelName}</p>
+            <Space />
+            <p>Server:</p>
+            {guildIconUrl && (
+              <Image src={guildIconUrl} alt="Guild icon" w={100} h={100} />
+            )}
+            <Space />
+            <Space />
+            <p>User: {username}</p>
+            {avatarUrl && (
+              <Image src={avatarUrl} alt="User avatar" w={100} h={100} />
+            )}</Flex >
+
+        ) : (
+          <>
+            <Image src="/rocket.png" alt="Next.js logo" h={160} w={160} />
+            <p>Welcome to the normal webpage version 🚀</p>
+            <p>Jacob Rocks 👾</p>
+          </>
+        )
+      }
+    </Group >
+
+
+
+
+
   );
 }
