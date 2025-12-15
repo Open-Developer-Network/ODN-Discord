@@ -4,27 +4,11 @@ import { useState, useEffect } from "react";
 import { Image, Container, Space, Flex, Group } from '@mantine/core';
 
 export default function Home() {
-  type User = {
-    username: string | null | undefined;
-    avatarUrl: string | null | undefined;
-    channelName: string | null | undefined;
-    guildIconUrl: string | null | undefined;
-  };
-
-  const [User, setUser] = useState<User>({
-    username: "Unknown",
-    avatarUrl: "Unknown",
-    channelName: "Unknown",
-    guildIconUrl: "Unknown"
-  });
-
+  const [channelName, setChannelName] = useState("Unknown");
+  const [guildIconUrl, setGuildIconUrl] = useState<string | null>(null);
+  const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
+  const [username, setUsername] = useState("Unknown");
   const [isDiscordActivity, setIsDiscordActivity] = useState(false);
-
-
-
-  if (User.channelName !== "Unknown") {
-    console.log("Channel Name:", User.channelName);
-  }
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -66,20 +50,14 @@ export default function Home() {
         const auth = await discordSdk.commands.authenticate({ access_token: data.access_token });
         if (!auth) throw new Error("Authenticate command failed");
 
-        setUser(prev => ({
-          ...prev,
-          username: auth.user.username,
-          avatarUrl: `https://cdn.discordapp.com/avatars/${auth.user.id}/${auth.user.avatar}.png`,
-
-        }));
-
+        setUsername(auth.user.username);
+        setUserAvatarUrl(
+          `https://cdn.discordapp.com/avatars/${auth.user.id}/${auth.user.avatar}.png`
+        );
 
         if (discordSdk.channelId) {
           const channel = await discordSdk.commands.getChannel({ channel_id: discordSdk.channelId });
-
-          setUser(prev => ({
-            ...prev, channelName: channel.name
-          }));
+          if (channel?.name) setChannelName(channel.name);
         }
 
         const guildRes = await fetch("https://discord.com/api/users/@me/guilds", {
@@ -88,10 +66,11 @@ export default function Home() {
         const guilds = await guildRes.json();
 
         const currentGuild = guilds.find((g: any) => g.id === discordSdk.guildId);
-
-        setUser(prev => ({
-          ...prev, guildIconUrl: `https://cdn.discordapp.com/icons/${currentGuild.id}/${currentGuild.icon}.png`
-        }));
+        if (currentGuild?.icon) {
+          setGuildIconUrl(
+            `https://cdn.discordapp.com/icons/${currentGuild.id}/${currentGuild.icon}.png`
+          );
+        }
       } catch (err) {
         console.error("Discord SDK setup failed:", err);
       }
@@ -99,8 +78,6 @@ export default function Home() {
 
     setupDiscordSdk();
   }, []);
-
-  const { username, avatarUrl, channelName, guildIconUrl } = User;
   return (
 
 
@@ -120,8 +97,8 @@ export default function Home() {
             <Space />
             <Space />
             <p>User: {username}</p>
-            {avatarUrl && (
-              <Image src={avatarUrl} alt="User avatar" w={100} h={100} />
+            {userAvatarUrl && (
+              <Image src={userAvatarUrl} alt="User avatar" w={100} h={100} />
             )}</Flex >
 
         ) : (
