@@ -1,31 +1,71 @@
 "use client"
 import { DiscordSDK } from "@discord/embedded-app-sdk";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Image, Container, Space, Flex, Group, Button } from '@mantine/core';
-import { channel } from "diagnostics_channel";
 import type { User } from "@/components/types/user";
 export default function Home() {
 
 
   const [User, setUser] = useState<User>({
     username: "Unknown",
-    avatarUrl: "Unknown",
+    avatarUrl: null,
     channelName: "Unknown",
-    guildIconUrl: "Unknown",
+    guildIconUrl: null,
     isDiscordActivity: false,
   });
-  const [debug, setDebug] = useState<string>("");
+  const [debug, setDebug] = useState("");
   async function fetchUser() {
     try {
-      const res = await fetch("/api/user" + window.location.search);
-      const data: User = await res.json();
-      setUser(data);
-      setDebug(JSON.stringify(data, null, 2)); // show raw response
+      const discordSdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
+      await discordSdk.ready();
 
+      const { code } = await discordSdk.commands.authorize({
+        client_id: process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!,
+        response_type: "code",
+        state: "",
+        prompt: "none",
+        scope: ["identify", "guilds", "applications.commands"],
+      });
+      // Exchange code for token via API route
+      const tokenRes = await fetch("/api/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const tokenData = await tokenRes.json();
+
+      const auth = await discordSdk.commands.authenticate({ access_token: tokenData.access_token });
+
+      // Channel info
+      let channelName = "Unknown";
+      if (discordSdk.channelId) {
+        const channel = await discordSdk.commands.getChannel({ channel_id: discordSdk.channelId });
+        channelName = channel?.name ?? "Unknown";
+      }
+
+      // Guild info
+      const guildRes = await fetch("https://discord.com/api/users/@me/guilds", {
+        headers: { Authorization: `Bearer ${tokenData.access_token}` },
+      });
+      const guilds = await guildRes.json();
+      const currentGuild = guilds.find((g: any) => g.id === discordSdk.guildId);
+
+      const newUser: User = {
+        username: auth.user.username ?? "Unknown",
+        avatarUrl: auth.user.avatar
+          ? `https://cdn.discordapp.com/avatars/${auth.user.id}/${auth.user.avatar}.png`
+          : null,
+        channelName,
+        guildIconUrl: currentGuild?.icon
+          ? `https://cdn.discordapp.com/icons/${currentGuild.id}/${currentGuild.icon}.png`
+          : null,
+        isDiscordActivity: true,
+      };
+
+      setUser(newUser);
+      setDebug(JSON.stringify(newUser, null, 2));
     } catch (err) {
-      console.error("Error fetching user data:", err);
       setDebug("Error: " + (err as Error).message);
-
     }
   }
 
