@@ -79,10 +79,15 @@ export async function GET(req: Request) {
                 : null,
             isDiscordActivity: true,
         };
-
+        console.log("frameId:", frameId, "guildId:", guildId, "channelId:", channelId);
+        console.log("Token data:", tokenData);
+        console.log("Auth user:", auth.user);
         return NextResponse.json(user);
+
     } catch (err) {
         console.error("Discord SDK setup failed:", err);
+        console.log("frameId:", frameId, "guildId:", guildId, "channelId:", channelId);
+
         return NextResponse.json(
             {
                 username: "Unknown",
