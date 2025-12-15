@@ -2,16 +2,26 @@
 
 import { DiscordSDK } from "@discord/embedded-app-sdk";
 import { useState, useEffect } from "react";
-import NextLink from "next/link";
 import { Container, Image } from "@chakra-ui/react";
 
-// import rocketLogo from "@/public/rocketLogo.png"
-
 export default function Home() {
-  const [channelName, setChannelName] = useState<string>("Unknown");
+  const [channelName, setChannelName] = useState("Unknown");
   const [guildIconUrl, setGuildIconUrl] = useState<string | null>(null);
+  const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
+  const [username, setUsername] = useState("Unknown");
+  const [isDiscordActivity, setIsDiscordActivity] = useState(false);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const frameId = params.get("frame_id");
+
+    if (!frameId) {
+      console.log("Running as a normal webpage");
+      setIsDiscordActivity(false);
+      return;
+    }
+
+    setIsDiscordActivity(true);
     const discordSdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
 
     async function setupDiscordSdk() {
@@ -41,12 +51,26 @@ export default function Home() {
         const auth = await discordSdk.commands.authenticate({ access_token: data.access_token });
         if (!auth) throw new Error("Authenticate command failed");
 
-        console.log("Authenticated user:", auth.user);
+        setUsername(auth.user.username);
+        setUserAvatarUrl(
+          `https://cdn.discordapp.com/avatars/${auth.user.id}/${auth.user.avatar}.png`
+        );
 
-        if (discordSdk.channelId && discordSdk.guildId) {
+        if (discordSdk.channelId) {
           const channel = await discordSdk.commands.getChannel({ channel_id: discordSdk.channelId });
-          console.log("Channel response:", channel);
           if (channel?.name) setChannelName(channel.name);
+        }
+
+        const guildRes = await fetch("https://discord.com/api/users/@me/guilds", {
+          headers: { Authorization: `Bearer ${data.access_token}` },
+        });
+        const guilds = await guildRes.json();
+
+        const currentGuild = guilds.find((g: any) => g.id === discordSdk.guildId);
+        if (currentGuild?.icon) {
+          setGuildIconUrl(
+            `https://cdn.discordapp.com/icons/${currentGuild.id}/${currentGuild.icon}.png`
+          );
         }
       } catch (err) {
         console.error("Discord SDK setup failed:", err);
@@ -58,26 +82,23 @@ export default function Home() {
 
   return (
     <Container>
-      <Image
-        // className="dark:invert"
-        src="/rocket.png"
-        alt="Next.js logo"
-        width={100}
-        height={20}
-      />
+      <Image src="/rocket.png" alt="Next.js logo" width={100} height={20} />
 
-
-      Activity Channel: {channelName}
-      Guild:
-      Image
-      <Image
-        className="dark:invert"
-        src={`${guildIconUrl}`}
-        alt="Vercel logomark"
-        width={16}
-        height={16}
-      /> </Container>
-
-
+      {isDiscordActivity ? (
+        <>
+          <p>Activity Channel: {channelName}</p>
+          <p>Guild:</p>
+          {guildIconUrl && (
+            <Image src={guildIconUrl} alt="Guild icon" width={32} height={32} />
+          )}
+          <p>User: {username}</p>
+          {userAvatarUrl && (
+            <Image src={userAvatarUrl} alt="User avatar" width={32} height={32} />
+          )}
+        </>
+      ) : (
+        <p>Welcome to the normal webpage version 🚀</p>
+      )}
+    </Container>
   );
 }
