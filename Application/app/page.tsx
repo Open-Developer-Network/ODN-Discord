@@ -2,7 +2,6 @@
 import { DiscordSDK } from "@discord/embedded-app-sdk";
 import { useState, useEffect } from "react";
 import { Image, Container, Space, Flex, Group, Button } from '@mantine/core';
-import { channel } from "diagnostics_channel";
 
 export default function Home() {
   type User = {
@@ -60,7 +59,7 @@ export default function Home() {
             {avatarUrl && (
               <Image src={avatarUrl} alt="User avatar" w={100} h={100} />
             )}
-            <Button onClick={fetchUser()}></Button>
+            <Button onClick={fetchUser}></Button>
           </Flex >
 
         ) : (
