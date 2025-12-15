@@ -49,7 +49,7 @@ export default function Home() {
             {avatarUrl && (
               <Image src={avatarUrl} alt="User avatar" w={100} h={100} />
             )}
-            <Button onClick={fetchUser}></Button>
+            <Button onClick={fetchUser}>Login</Button>
           </Flex >
 
         ) : (
@@ -57,6 +57,7 @@ export default function Home() {
             <Image src="/rocket.png" alt="Next.js logo" h={160} w={160} />
             <p>Welcome to the normal webpage version 🚀</p>
             <p>Jacob Rocks 👾</p>
+            <Button onClick={fetchUser}>Login</Button>
           </>
         )
       }
