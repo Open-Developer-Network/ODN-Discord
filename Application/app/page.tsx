@@ -14,9 +14,9 @@ export default function Home() {
 
   const [User, setUser] = useState<User>({
     username: "Unknown",
-    avatarUrl: null,
+    avatarUrl: "Unknown",
     channelName: "Unknown",
-    guildIconUrl: null
+    guildIconUrl: "Unknown"
   });
 
   const [isDiscordActivity, setIsDiscordActivity] = useState(false);
