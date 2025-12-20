@@ -11,8 +11,7 @@ import {
   IconButton
 } from "@chakra-ui/react";
 import Server from "@/components/types/server";
-import DiscordClient from "@/components/lib/system/client";
-import { DiscordSDK } from "@discord/embedded-app-sdk";
+import DiscordClient from "@/components/lib/system/client"; 
 import { useSearchParams } from "next/navigation";
 import { LuMinus, LuPlus } from "react-icons/lu";
 export default function Home() {
@@ -26,8 +25,8 @@ export default function Home() {
     "2xl": "2xl",
   });
 
-  const platformParams = useSearchParams()
-  let platformReq = platformParams.get('frame_id')
+  // const platformParams = useSearchParams()
+  // let platformReq = platformParams.get('frame_id')
   const [client, setClient] = useState<DiscordClient | null>(null);
   async function handleEnter() {
     const instance = new DiscordClient();
