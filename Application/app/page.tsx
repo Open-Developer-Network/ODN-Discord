@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import NextLink from "next/link";
 import {
   Image, Heading, Container, Flex, Box, Center, Stack, VStack, HStack, Code, Button, Link as ChakraLink, SimpleGrid, useBreakpointValue, Avatar,
@@ -11,7 +11,7 @@ import {
   IconButton
 } from "@chakra-ui/react";
 import Server from "@/components/types/server";
-import DiscordClient from "@/components/lib/system/client"; 
+import DiscordClient from "@/components/lib/system/client";
 import { useSearchParams } from "next/navigation";
 import { LuMinus, LuPlus } from "react-icons/lu";
 export default function Home() {
@@ -25,8 +25,8 @@ export default function Home() {
     "2xl": "2xl",
   });
 
-  // const platformParams = useSearchParams()
-  // let platformReq = platformParams.get('frame_id')
+  const platformParams = useSearchParams()
+  let platformReq = platformParams.get('frame_id')
   const [client, setClient] = useState<DiscordClient | null>(null);
   async function handleEnter() {
     const instance = new DiscordClient();
@@ -52,7 +52,7 @@ export default function Home() {
 
   })
   return (
-    <>
+    <Suspense fallback={<div>Loading…</div>}>
       <HStack bg="blue" h={'10vh'} px={4} alignItems={'center'} pt={4}>Hi</HStack>
       < Button onClick={handleEnter}>Enter</Button >
 
@@ -195,6 +195,7 @@ export default function Home() {
       </Card.Root>
 
       <Button onClick={() => (console.log("Discord SDK is ready"))} >Log Me</Button >
-    </>
+
+    </Suspense>
   )
 }
