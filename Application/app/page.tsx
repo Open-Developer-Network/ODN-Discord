@@ -1,130 +1,201 @@
 "use client"
-import { DiscordSDK } from "@discord/embedded-app-sdk";
 import { useState, useEffect } from "react";
-import { Image, Container, Space, Flex, Group } from '@mantine/core';
-import { channel } from "diagnostics_channel";
+import NextLink from "next/link";
+import {
+  Image, Heading, Container, Flex, Box, Center, Stack, VStack, HStack, Code, Button, Link as ChakraLink, SimpleGrid, useBreakpointValue, Avatar,
+  Card, Field,
+  Fieldset,
+  For,
+  Input,
+  NativeSelect, Text, NumberInput,
+  IconButton
+} from "@chakra-ui/react";
+import Server from "@/components/types/server";
+import DiscordClient from "@/components/lib/system/client";
+import { DiscordSDK } from "@discord/embedded-app-sdk";
+import { useSearchParams } from "next/navigation";
+import { LuMinus, LuPlus } from "react-icons/lu";
 export default function Home() {
-  type User = {
-    username: string;
-    avatarUrl: string | null;
-    channelName: string | null | undefined;
-    guildIconUrl: string | null;
-  };
-  const [User, setUser] = useState<User>({
-    username: "Unknown",
-    avatarUrl: "Unknown",
-    channelName: "Unknown",
-    guildIconUrl: "Unknown"
+
+  const current = useBreakpointValue({
+    base: "base",
+    sm: "sm",
+    md: "md",
+    lg: "lg",
+    xl: "xl",
+    "2xl": "2xl",
   });
-  const [isDiscordActivity, setIsDiscordActivity] = useState(false);
-  if (User.channelName !== "Unknown") {
-    console.log("Channel Name:", User.channelName);
+
+  const platformParams = useSearchParams()
+  let platformReq = platformParams.get('frame_id')
+  const [client, setClient] = useState<DiscordClient | null>(null);
+  async function handleEnter() {
+    const instance = new DiscordClient();
+
+    await instance.init();   // runs sdk.ready()
+    setClient(instance);
+
+    console.log("SDK initialized");
   }
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const frameId = params.get("frame_id");
-    if (!frameId) {
-      console.log("Running as a normal webpage");
-      setIsDiscordActivity(false);
-      return;
-    }
-    setIsDiscordActivity(true);
-    const discordSdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
-    async function setupDiscordSdk() {
-      try {
-        await discordSdk.ready();
-        const { code } = await discordSdk.commands.authorize({
-          client_id: process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!,
-          response_type: "code",
-          state: "",
-          prompt: "none",
-          scope: ["identify", "guilds", "applications.commands"],
-        });
-        const response = await fetch("/api/token",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ code }),
-          });
-        const data = await response.json();
-        if (!data.access_token) {
-          console.error("Token exchange failed:", data);
-          return;
-        }
-        const auth = await discordSdk.commands.authenticate({
-          access_token: data.access_token
-        });
-        if (!auth) throw new Error("Authenticate command failed");
-        setUser(prev => ({
-          ...prev,
-          username: auth.user.username,
-          avatarUrl: `https://cdn.discordapp.com/avatars/${auth.user.id}/${auth.user.avatar}.png`,
-        }));
-        if (discordSdk.channelId) {
-          const channel = await discordSdk.commands.getChannel({
-            channel_id: discordSdk.channelId
-          });
-          setUser(prev => ({
-            ...prev,
-            channelName: channel.name
-          }));
-        }
-        const guildRes = await fetch(
-          "https://discord.com/api/users/@me/guilds",
-          {
-            headers: {
-              Authorization: `Bearer ${data.access_token}`
-            },
-          });
-        const guilds = await guildRes.json();
-        const currentGuild = guilds.find((g: any) => g.id === discordSdk.guildId);
-        setUser(prev => ({
-          ...prev,
-          guildIconUrl:
-            `https://cdn.discordapp.com/icons/${currentGuild.id}/${currentGuild.icon}.png`
-        }));
-      } catch (err) {
-        console.error("Discord SDK setup failed:", err);
-      }
-    } setupDiscordSdk();
-  }, []);
-  const { username, avatarUrl, channelName, guildIconUrl } = User;
+  let [defaultCaptureTime] = useState(() => Date.now())
+  const defaultAlloted = 5 * 60000;
+  let [defaultCountdownTime] = useState(() => defaultCaptureTime + defaultAlloted)
+  const [fields, setFields] = useState({
+    // status: string, state: string, startStamp: number, currentParty: number, maxParty: number, endStamp?: number
+    status: 'Developing ODN',//Developing  | playing <Game Name>
+    state: 'In Mainframe',//Waiting in Queue | Starting Soon| Looking for group
+    startStamp: defaultCaptureTime,    //Right now
+    endStamp: defaultCountdownTime,    //Timer end
+    title: '',//Game Name
+    details: '',
+    currentParty: 1,
+    maxParty: 4,
+
+  })
   return (
+    <>
+      <HStack bg="blue" h={'10vh'} px={4} alignItems={'center'} pt={4}>Hi</HStack>
+      < Button onClick={handleEnter}>Enter</Button >
 
+      <Button onClick={() => { client?.log("Hello from the Activity!") }}>
+        Discord Log
+      </Button>
 
-    <Group pl={40} pt={20} bg={"#a5d8ff"}>
-      {isDiscordActivity ?
-        (
+      <Card.Root maxW={'md'}>
+        <Fieldset.Root size="lg" maxW="md">
+          <Stack>
+            <Card.Title><Fieldset.Legend>Activity details</Fieldset.Legend></Card.Title>
+            <Card.Description><Fieldset.HelperText>
+              Please provide your activity details below.
+            </Fieldset.HelperText></Card.Description>
 
-          <Flex direction="row" align="center"
-            justify="flex-start" gap={'lg'}>
-            <Image src="/rocket.png" alt="Next.js logo" w={100} h={100} />
-            <p>Activity Channel: {User.channelName}</p>
-            <Space />
-            <p>Server:</p>
-            {User.guildIconUrl && (
-              <Image src={User.guildIconUrl} alt="Guild icon" w={100} h={100} />
-            )}
-            <Space />
-            <Space />
-            <p>User: {User.username}</p>
-            {User.avatarUrl && (
-              <Image src={User.avatarUrl} alt="User avatar" w={100} h={100} />
-            )}</Flex >
+          </Stack>
 
-        ) : (
-          <>
-            <Image src="/rocket.png" alt="Next.js logo" h={160} w={160} />
-            <p>Welcome to the normal webpage version 🚀</p>
-            <p>Jacob Rocks 👾</p>
-          </>
-        )
-      }
-    </Group >
+          <Fieldset.Content>
+            <Field.Root>
+              <Field.Label>Title</Field.Label>
+              <Input name="Title" value={fields.title}
+                onChange={(e) =>
+                  setFields((fields) => ({
+                    ...fields,
+                    title: e.target.value,
+                  }))} />
+            </Field.Root>
 
+            <Field.Root>
+              <Field.Label>Details</Field.Label>
+              <Input name="Details" value={fields.details}
+                onChange={(e) =>
+                  setFields((fields) => ({
+                    ...fields,
+                    details: e.target.value,
+                  }))} />
+            </Field.Root>
 
+            <Field.Root>
+              <Field.Label>State</Field.Label>
+              <NativeSelect.Root>
+                <NativeSelect.Field name="State" onChange={(e) => setFields((fields) => ({
+                  ...fields,
+                  state: e.target.value,
+                }))}>
+                  <For each={["Testing ODN", "Using ODN", "Developing ODN"]}>
+                    {(item) => (
+                      <option key={item} value={item} >
+                        {item}
+                      </option>
+                    )}
+                  </For>
+                </NativeSelect.Field>
+                <NativeSelect.Indicator />
+              </NativeSelect.Root>
+            </Field.Root>
+            <Field.Root>
+              <Field.Label>Status</Field.Label>
+              <NativeSelect.Root>
+                <NativeSelect.Field name="Status" onChange={(e) => setFields((fields) => ({
+                  ...fields,
+                  status: e.target.value,
+                }))}>
+                  <For each={["Waiting in Queue", "Starting Soon", "Looking for group"]}>
+                    {(item) => (
+                      <option key={item} value={item} >
+                        {item}
+                      </option>
+                    )}
+                  </For>
+                </NativeSelect.Field>
+                <NativeSelect.Indicator />
+              </NativeSelect.Root>
+            </Field.Root>
+            <Field.Root>
+              <Field.Label>Current Participants</Field.Label>
+              <NumberInput.Root defaultValue="1" unstyled spinOnPress={false} onValueChange={(e: { value: string; valueAsNumber: number }) => setFields((fields) => ({
+                ...fields,
+                currentParty: Number(e.valueAsNumber),
+              }))}>
+                <HStack gap="2">
+                  <NumberInput.DecrementTrigger asChild >
+                    <IconButton variant="outline" size="sm">
+                      <LuMinus />
+                    </IconButton>
+                  </NumberInput.DecrementTrigger>
+                  <NumberInput.ValueText textAlign="center" fontSize="lg" minW="3ch" />
+                  <NumberInput.IncrementTrigger asChild>
+                    <IconButton variant="outline" size="sm">
+                      <LuPlus />
+                    </IconButton>
+                  </NumberInput.IncrementTrigger>
+                </HStack>
+              </NumberInput.Root>
+            </Field.Root>
 
+            <Field.Root>
+              <Field.Label>Max Participants</Field.Label>
+              <NumberInput.Root defaultValue="4" unstyled spinOnPress={false} onValueChange={(e: { value: string; valueAsNumber: number }) => setFields((fields) => ({
+                ...fields,
+                maxParty: Number(e.valueAsNumber),
+              }))}>
+                <HStack gap="2">
+                  <NumberInput.DecrementTrigger asChild>
+                    <IconButton variant="outline" size="sm">
+                      <LuMinus />
+                    </IconButton>
+                  </NumberInput.DecrementTrigger>
+                  <NumberInput.ValueText textAlign="center" fontSize="lg" minW="3ch" />
+                  <NumberInput.IncrementTrigger asChild>
+                    <IconButton variant="outline" size="sm">
+                      <LuPlus />
+                    </IconButton>
+                  </NumberInput.IncrementTrigger>
+                </HStack>
+              </NumberInput.Root>
+            </Field.Root>
+          </Fieldset.Content>
+          {/* 'A new LFG Platform. Click here to [signup](https://localhost:3000).' */}
+          <Text>{fields.state}</Text>
+          <Text>{fields.status}</Text>
+          <Text>{fields.title}</Text>
+          <Text>{fields.details}</Text>
+          <Text>{fields.currentParty}</Text>
+          <Text>{fields.maxParty}</Text>
+          <Button alignSelf="flex-start" onClick={() => {
+            // action: string, message?: string, maxParticipants?: number, timestamp?: number, status?: string
+            client?.ActivityInfo({
+              status: fields.status,
+              state: fields.state,
+              currentParty: fields.currentParty,
+              maxParty: fields.maxParty,
+              startStamp: fields.startStamp,
+              endStamp: fields.endStamp,
+            })
+          }}>
+            Update Discord Activity
+          </Button>
+        </Fieldset.Root>
+      </Card.Root>
 
-
-  );
+      <Button onClick={() => (console.log("Discord SDK is ready"))} >Log Me</Button >
+    </>
+  )
 }
