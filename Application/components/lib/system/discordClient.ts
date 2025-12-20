@@ -1,7 +1,8 @@
 // import { DiscordSDK } from "@discord/embedded-app-sdk";
 // import type { User } from "@/components/types/user";
 
-// export async function getDiscordUser(): Promise<User> {
+export async function getDiscordUser(){ }
+// export async function getDiscordUser(): Promise<User> { 
 //     const discordSdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!);
 //     await discordSdk.ready();
 
