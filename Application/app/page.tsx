@@ -14,6 +14,8 @@ import Server from "@/components/types/server";
 import DiscordClient from "@/components/lib/system/client";
 import FrameIdReader from "@/components/lib/system/frameReader";
 import { LuMinus, LuPlus } from "react-icons/lu";
+import { NormalizeRank } from "@/components/lib/games/r6/utils/normalizeRank";
+import { RankHistoryCard } from "@/components/lib/games/r6/components/RankHistoryCard";
 
 export default function Home() {
 
@@ -61,8 +63,26 @@ export default function Home() {
   }, []);
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const discordID = 123456789012345678; // Replace with dynamic Discord ID as needed
+  const [exampleStat, setExampleStat] = useState<{ nameOnPlatform: string; platformType: string }>({
+    nameOnPlatform: "MB_FRAG",
+    platformType: "steam"
+  });
+
   async function fetchStats() {
-    setLoading(true); const res = await fetch("/api/r6/stats", { method: "POST", body: JSON.stringify({ nameOnPlatform: "MB_FRAG", platformType: "steam" }), headers: { "Content-Type": "application/json" } }); const data = await res.json(); setStats(data); setLoading(false);
+    setLoading(true);
+    const res = await fetch(`/api/${discordID}/games/r6/stats/playerinfo/mock`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          nameOnPlatform: exampleStat.nameOnPlatform,
+          platformType: exampleStat.platformType
+        }),
+        headers: { "Content-Type": "application/json" }
+      });
+    const data = await res.json();
+    setStats(data);
+    setLoading(false);
   }
 
   return (
@@ -213,71 +233,8 @@ export default function Home() {
       {stats && (
         <SimpleGrid columns={1} gap={4} mt={4}>
 
-          {stats?.data?.history?.data?.map(([timestamp, info]: [string, any], index: number) => {
-            const date = new Date(timestamp).toLocaleString();
-
-            function normalizeRank(rank: string) {
-              const romanMap: Record<string, number> = {
-                "I": 1,
-                "II": 2,
-                "III": 3,
-                "IV": 4,
-                "V": 5
-              };
-              if (!rank) { return { tier: null, division: null }; }
-              // Example: "COPPER IV"
-              const parts = rank.trim().split(" ");
-              // Champion has no numeral
-              if (parts.length === 1) {
-                // "champion"
-                return {
-                  tier: parts[0].toLowerCase(),
-                  division: null
-
-                };
-              }
-              // Normal ranks like "COPPER IV"
-              const tier = parts[0].toLowerCase();
-              const roman = parts[1];
-              const division = romanMap[roman] ?? null;
-              return { tier, division };
-            }
-            const { tier, division } = normalizeRank(info.metadata.rank);
-            const imagePath = division ? `/R6/ranks/${tier}/R6-${tier}${division}.webp` : `/R6/ranks/${tier}/R6-${tier}.webp`;
-            return (
-              <Card.Root style={{ padding: 16 }} size={'sm'} maxW={'xs'} h={'xs'} key={index}>
-                <Card.Title>
-                  <h3 style={{ marginBottom: 12 }}>
-                    Rank History
-                  </h3>
-                </Card.Title>
-
-                {!stats?.data?.history?.data && (
-                  <p>No rank history available.</p>
-                )}
-                <div style={{ display: "flex", alignItems: "center", gap: 12, padding: 12, marginBottom: 10, background: "#1a1a1a", borderRadius: 8, border: "1px solid #333" }} >
-                  {/* Rank Image */}
-                  <Image src={imagePath} alt={`${tier}`} width={50} height={50} style={{ borderRadius: 4 }} />
-                  {/* Rank Info */}
-                  <div style={{ flex: 1 }}>
-                    <strong style={{ fontSize: 16 }}>
-                      {info.metadata.rank}
-                    </strong>
-                    <div style={{ color: "#aaa", fontSize: 12 }}>
-                      {date}
-                    </div>
-                  </div>
-                  {/* RP Value */}
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{ fontSize: 18, color: info.metadata.color }}> {info.displayValue}
-                    </div>
-                    <div style={{ fontSize: 12, color: "#888" }}>
-                      RP
-                    </div>
-                  </div>
-                </div>
-              </Card.Root >
-            );
+          {stats?.data?.map(([timestamp, info]: [string, any], index: number) => {
+            return <RankHistoryCard key={index} timestamp={timestamp} info={info} />
           })}
 
         </SimpleGrid >)
