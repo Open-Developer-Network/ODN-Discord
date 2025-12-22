@@ -117,10 +117,9 @@ export default function Home() {
                     </Text>
                   </Stack>
                 </HStack>
-                <Card.Description>
+                <Card.Description textAlign={'center'}>
                   <Strong color="fg">MB_FRAG </Strong>
-                  <br />
-                  <Text textAlign={'center'}>Please read and accept our terms and conditions to use our platform.</Text>
+                  <br /> Please read and accept our terms and conditions to use our platform.
 
                   <Stack gap="4">
                     <Button alignSelf='center' onClick={onToggle} bg={'transparent'} color={'white'}>
@@ -136,7 +135,7 @@ export default function Home() {
 
                         <ScrollArea.Root height="15rem">
                           <ScrollArea.Viewport>
-                            <ScrollArea.Content spaceY="4" >
+                            <ScrollArea.Content spaceX="4" textAlign={'left'}>
                               <Terms />
                               <Privacy />
                             </ScrollArea.Content>
