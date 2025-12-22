@@ -36,21 +36,35 @@ export default function Home() {
 
     console.log("SDK initialized");
   }
-  let [defaultCaptureTime] = useState(() => Date.now())
-  const defaultAlloted = 5 * 60000;
-  let [defaultCountdownTime] = useState(() => defaultCaptureTime + defaultAlloted)
-  const [fields, setFields] = useState({
-    // status: string, state: string, startStamp: number, currentParty: number, maxParty: number, endStamp?: number
-    status: 'Developing ODN',//Developing  | playing <Game Name>
-    state: 'In Mainframe',//Waiting in Queue | Starting Soon| Looking for group
-    startStamp: defaultCaptureTime,    //Right now
-    endStamp: defaultCountdownTime,    //Timer end
-    title: '',//Game Name
-    details: '',
-    currentParty: 1,
-    maxParty: 4,
 
-  })
+  let [defaultCaptureTime, setDefaultCaptureTime] = useState<number>(1)
+  const defaultAlloted = 5 * 60;
+  let [defaultCountdownTime] = useState(() => (defaultCaptureTime + defaultAlloted))
+
+
+  const [fields, setFields] = useState(
+    {
+      // status: string, state: string, startStamp: number, currentParty: number, maxParty: number, endStamp?: number
+      status: 'Developing ODN', //Developing  | playing <Game Name>
+      state: 'In Mainframe',  //Waiting in Queue | Starting Soon| Looking for group
+      startStamp: defaultCaptureTime,    //Right now
+      endStamp: defaultCountdownTime,    //Timer end
+      title: '',  //Game Name
+      details: '',
+      currentParty: 1,
+      maxParty: 4,
+    })
+
+  useEffect(() => {
+    const captureTime = Date.now() / 1000;
+    setDefaultCaptureTime(captureTime)
+  }, []);
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  async function fetchStats() {
+    setLoading(true); const res = await fetch("/api/r6/stats", { method: "POST", body: JSON.stringify({ nameOnPlatform: "MB_FRAG", platformType: "steam" }), headers: { "Content-Type": "application/json" } }); const data = await res.json(); setStats(data); setLoading(false);
+  }
+
   return (
     <><Suspense fallback={null}>
       <FrameIdReader onValue={setFrameId} />
@@ -195,6 +209,85 @@ export default function Home() {
           </Button>
         </Fieldset.Root>
       </Card.Root>
+      {loading && <p>Loading...</p>}
+      {stats && (
+        <SimpleGrid columns={1} gap={4} mt={4}>
+
+          {stats?.data?.history?.data?.map(([timestamp, info]: [string, any], index: number) => {
+            const date = new Date(timestamp).toLocaleString();
+
+            function normalizeRank(rank: string) {
+              const romanMap: Record<string, number> = {
+                "I": 1,
+                "II": 2,
+                "III": 3,
+                "IV": 4,
+                "V": 5
+              };
+              if (!rank) { return { tier: null, division: null }; }
+              // Example: "COPPER IV"
+              const parts = rank.trim().split(" ");
+              // Champion has no numeral
+              if (parts.length === 1) {
+                // "champion"
+                return {
+                  tier: parts[0].toLowerCase(),
+                  division: null
+
+                };
+              }
+              // Normal ranks like "COPPER IV"
+              const tier = parts[0].toLowerCase();
+              const roman = parts[1];
+              const division = romanMap[roman] ?? null;
+              return { tier, division };
+            }
+            const { tier, division } = normalizeRank(info.metadata.rank);
+            const imagePath = division ? `/R6/ranks/${tier}/R6-${tier}${division}.webp` : `/R6/ranks/${tier}/R6-${tier}.webp`;
+            return (
+              <Card.Root style={{ padding: 16 }} size={'sm'} maxW={'xs'} h={'xs'} key={index}>
+                <Card.Title>
+                  <h3 style={{ marginBottom: 12 }}>
+                    Rank History
+                  </h3>
+                </Card.Title>
+
+                {!stats?.data?.history?.data && (
+                  <p>No rank history available.</p>
+                )}
+                <div style={{ display: "flex", alignItems: "center", gap: 12, padding: 12, marginBottom: 10, background: "#1a1a1a", borderRadius: 8, border: "1px solid #333" }} >
+                  {/* Rank Image */}
+                  <Image src={imagePath} alt={`${tier}`} width={50} height={50} style={{ borderRadius: 4 }} />
+                  {/* Rank Info */}
+                  <div style={{ flex: 1 }}>
+                    <strong style={{ fontSize: 16 }}>
+                      {info.metadata.rank}
+                    </strong>
+                    <div style={{ color: "#aaa", fontSize: 12 }}>
+                      {date}
+                    </div>
+                  </div>
+                  {/* RP Value */}
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: 18, color: info.metadata.color }}> {info.displayValue}
+                    </div>
+                    <div style={{ fontSize: 12, color: "#888" }}>
+                      RP
+                    </div>
+                  </div>
+                </div>
+              </Card.Root >
+            );
+          })}
+
+        </SimpleGrid >)
+      }
+      <Button
+        onClick={fetchStats}
+      >
+        Get Seasonal Stats
+      </Button>
+
 
       <Button onClick={() => (console.log("Discord SDK is ready"))} >Log Me</Button >
     </>
