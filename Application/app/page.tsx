@@ -8,14 +8,19 @@ import {
   For,
   Input,
   NativeSelect, Text, NumberInput,
-  IconButton
+  IconButton, Strong,
+  Presence,
+  useDisclosure,
+  ScrollArea
 } from "@chakra-ui/react";
 import Server from "@/components/types/server";
 import DiscordClient from "@/components/lib/system/client";
 import FrameIdReader from "@/components/lib/system/frameReader";
-import { LuMinus, LuPlus } from "react-icons/lu";
+import { LuCheck, LuMinus, LuPlus, LuX } from "react-icons/lu";
 import { NormalizeRank } from "@/components/lib/games/r6/utils/normalizeRank";
 import { RankHistoryCard } from "@/components/lib/games/r6/components/RankHistoryCard";
+import Privacy from "./privacy/page";
+import Terms from "./terms/page";
 
 export default function Home() {
 
@@ -85,168 +90,242 @@ export default function Home() {
     setLoading(false);
   }
 
+  const { open, onToggle } = useDisclosure()
   return (
-    <><Suspense fallback={null}>
-      <FrameIdReader onValue={setFrameId} />
-    </Suspense>
+    <>
+      <Suspense fallback={null}>
+        <FrameIdReader onValue={setFrameId} />
+      </Suspense>
       <HStack bg="blue" h={'10vh'} px={4} alignItems={'center'} pt={4}>Hi</HStack>
-      < Button onClick={handleEnter}>Enter</Button >
-
-      <Button onClick={() => { client?.log("Hello from the Activity!") }}>
-        Discord Log
-      </Button>
-
-      <Card.Root maxW={'md'}>
-        <Fieldset.Root size="lg" maxW="md">
-          <Stack>
-            <Card.Title><Fieldset.Legend>Activity details</Fieldset.Legend></Card.Title>
-            <Card.Description><Fieldset.HelperText>
-              Please provide your activity details below.
-            </Fieldset.HelperText></Card.Description>
-
-          </Stack>
-
-          <Fieldset.Content>
-            <Field.Root>
-              <Field.Label>Title</Field.Label>
-              <Input name="Title" value={fields.title}
-                onChange={(e) =>
-                  setFields((fields) => ({
-                    ...fields,
-                    title: e.target.value,
-                  }))} />
-            </Field.Root>
-
-            <Field.Root>
-              <Field.Label>Details</Field.Label>
-              <Input name="Details" value={fields.details}
-                onChange={(e) =>
-                  setFields((fields) => ({
-                    ...fields,
-                    details: e.target.value,
-                  }))} />
-            </Field.Root>
-
-            <Field.Root>
-              <Field.Label>State</Field.Label>
-              <NativeSelect.Root>
-                <NativeSelect.Field name="State" onChange={(e) => setFields((fields) => ({
-                  ...fields,
-                  state: e.target.value,
-                }))}>
-                  <For each={["Testing ODN", "Using ODN", "Developing ODN"]}>
-                    {(item) => (
-                      <option key={item} value={item} >
-                        {item}
-                      </option>
-                    )}
-                  </For>
-                </NativeSelect.Field>
-                <NativeSelect.Indicator />
-              </NativeSelect.Root>
-            </Field.Root>
-            <Field.Root>
-              <Field.Label>Status</Field.Label>
-              <NativeSelect.Root>
-                <NativeSelect.Field name="Status" onChange={(e) => setFields((fields) => ({
-                  ...fields,
-                  status: e.target.value,
-                }))}>
-                  <For each={["Waiting in Queue", "Starting Soon", "Looking for group"]}>
-                    {(item) => (
-                      <option key={item} value={item} >
-                        {item}
-                      </option>
-                    )}
-                  </For>
-                </NativeSelect.Field>
-                <NativeSelect.Indicator />
-              </NativeSelect.Root>
-            </Field.Root>
-            <Field.Root>
-              <Field.Label>Current Participants</Field.Label>
-              <NumberInput.Root defaultValue="1" unstyled spinOnPress={false} onValueChange={(e: { value: string; valueAsNumber: number }) => setFields((fields) => ({
-                ...fields,
-                currentParty: Number(e.valueAsNumber),
-              }))}>
-                <HStack gap="2">
-                  <NumberInput.DecrementTrigger asChild >
-                    <IconButton variant="outline" size="sm">
-                      <LuMinus />
-                    </IconButton>
-                  </NumberInput.DecrementTrigger>
-                  <NumberInput.ValueText textAlign="center" fontSize="lg" minW="3ch" />
-                  <NumberInput.IncrementTrigger asChild>
-                    <IconButton variant="outline" size="sm">
-                      <LuPlus />
-                    </IconButton>
-                  </NumberInput.IncrementTrigger>
+      <Container>
+        <VStack>
+          <Center>
+            <Card.Root>
+              <Card.Body>
+                <Card.Title textAlign={'center'}>Welcome to ODN LFG</Card.Title>
+                <HStack mb="6" gap="3">
+                  <Avatar.Root>
+                    <Avatar.Image src="https://images.unsplash.com/photo-1511806754518-53bada35f930" />
+                    <Avatar.Fallback name="MB_FRAG" />
+                  </Avatar.Root>
+                  <Stack gap="0">
+                    <Text fontWeight="semibold" textStyle="sm">
+                      MB_FRAG
+                    </Text>
+                    <Text color="fg.muted" textStyle="sm">
+                      @mb_frag
+                    </Text>
+                  </Stack>
                 </HStack>
-              </NumberInput.Root>
-            </Field.Root>
+                <Card.Description>
+                  <Strong color="fg">MB_FRAG </Strong>
+                  <br />
+                  <Text textAlign={'center'}>Please read and accept our terms and conditions to use our platform.</Text>
 
-            <Field.Root>
-              <Field.Label>Max Participants</Field.Label>
-              <NumberInput.Root defaultValue="4" unstyled spinOnPress={false} onValueChange={(e: { value: string; valueAsNumber: number }) => setFields((fields) => ({
-                ...fields,
-                maxParty: Number(e.valueAsNumber),
-              }))}>
-                <HStack gap="2">
-                  <NumberInput.DecrementTrigger asChild>
-                    <IconButton variant="outline" size="sm">
-                      <LuMinus />
-                    </IconButton>
-                  </NumberInput.DecrementTrigger>
-                  <NumberInput.ValueText textAlign="center" fontSize="lg" minW="3ch" />
-                  <NumberInput.IncrementTrigger asChild>
-                    <IconButton variant="outline" size="sm">
-                      <LuPlus />
-                    </IconButton>
-                  </NumberInput.IncrementTrigger>
-                </HStack>
-              </NumberInput.Root>
-            </Field.Root>
-          </Fieldset.Content>
-          {/* 'A new LFG Platform. Click here to [signup](https://localhost:3000).' */}
-          <Text>{fields.state}</Text>
-          <Text>{fields.status}</Text>
-          <Text>{fields.title}</Text>
-          <Text>{fields.details}</Text>
-          <Text>{fields.currentParty}</Text>
-          <Text>{fields.maxParty}</Text>
-          <Button alignSelf="flex-start" onClick={() => {
-            // action: string, message?: string, maxParticipants?: number, timestamp?: number, status?: string
-            client?.ActivityInfo({
-              status: fields.status,
-              state: fields.state,
-              currentParty: fields.currentParty,
-              maxParty: fields.maxParty,
-              startStamp: fields.startStamp,
-              endStamp: fields.endStamp,
-            })
-          }}>
-            Update Discord Activity
+                  <Stack gap="4">
+                    <Button alignSelf='center' onClick={onToggle} bg={'transparent'} color={'white'}>
+                      Terms and Conditions
+                    </Button>
+
+                    <Presence
+                      present={open}
+                      animationName={{ _open: "fade-in", _closed: "fade-out" }}
+                      animationDuration="moderate"
+                    >
+                      <Center p="10" layerStyle="fill.muted">
+
+                        <ScrollArea.Root height="15rem">
+                          <ScrollArea.Viewport>
+                            <ScrollArea.Content spaceY="4" >
+                              <Terms />
+                              <Privacy />
+                            </ScrollArea.Content>
+                          </ScrollArea.Viewport>
+                          <ScrollArea.Scrollbar>
+                            <ScrollArea.Thumb />
+                          </ScrollArea.Scrollbar>
+                          <ScrollArea.Corner />
+                        </ScrollArea.Root>
+                      </Center>
+                    </Presence>
+                  </Stack>
+                  <br />
+                  <Text textAlign={'center'}>You can approve or decline below.</Text>
+
+                </Card.Description>
+              </Card.Body>
+              <Card.Footer>
+                <Button variant="subtle" colorPalette="red" flex="1">
+                  <LuX />
+                  Decline
+                </Button>
+                <Button variant="subtle" colorPalette="blue" flex="1">
+                  <LuCheck />
+                  Approve
+                </Button>
+              </Card.Footer>
+            </Card.Root>
+          </Center>
+          < Button onClick={handleEnter}>Enter</Button >
+
+          <Button onClick={() => { client?.log("Hello from the Activity!") }}>
+            Discord Log
           </Button>
-        </Fieldset.Root>
-      </Card.Root>
-      {loading && <p>Loading...</p>}
-      {stats && (
-        <SimpleGrid columns={1} gap={4} mt={4}>
 
-          {stats?.data?.map(([timestamp, info]: [string, any], index: number) => {
-            return <RankHistoryCard key={index} timestamp={timestamp} info={info} />
-          })}
+          <Card.Root maxW={'md'}>
+            <Fieldset.Root size="lg" maxW="md">
+              <Stack>
+                <Card.Title><Fieldset.Legend>Activity details</Fieldset.Legend></Card.Title>
+                <Card.Description><Fieldset.HelperText>
+                  Please provide your activity details below.
+                </Fieldset.HelperText></Card.Description>
 
-        </SimpleGrid >)
-      }
-      <Button
-        onClick={fetchStats}
-      >
-        Get Seasonal Stats
-      </Button>
+              </Stack>
+
+              <Fieldset.Content>
+                <Field.Root>
+                  <Field.Label>Title</Field.Label>
+                  <Input name="Title" value={fields.title}
+                    onChange={(e) =>
+                      setFields((fields) => ({
+                        ...fields,
+                        title: e.target.value,
+                      }))} />
+                </Field.Root>
+
+                <Field.Root>
+                  <Field.Label>Details</Field.Label>
+                  <Input name="Details" value={fields.details}
+                    onChange={(e) =>
+                      setFields((fields) => ({
+                        ...fields,
+                        details: e.target.value,
+                      }))} />
+                </Field.Root>
+
+                <Field.Root>
+                  <Field.Label>State</Field.Label>
+                  <NativeSelect.Root>
+                    <NativeSelect.Field name="State" onChange={(e) => setFields((fields) => ({
+                      ...fields,
+                      state: e.target.value,
+                    }))}>
+                      <For each={["Testing ODN", "Using ODN", "Developing ODN"]}>
+                        {(item) => (
+                          <option key={item} value={item} >
+                            {item}
+                          </option>
+                        )}
+                      </For>
+                    </NativeSelect.Field>
+                    <NativeSelect.Indicator />
+                  </NativeSelect.Root>
+                </Field.Root>
+                <Field.Root>
+                  <Field.Label>Status</Field.Label>
+                  <NativeSelect.Root>
+                    <NativeSelect.Field name="Status" onChange={(e) => setFields((fields) => ({
+                      ...fields,
+                      status: e.target.value,
+                    }))}>
+                      <For each={["Waiting in Queue", "Starting Soon", "Looking for group"]}>
+                        {(item) => (
+                          <option key={item} value={item} >
+                            {item}
+                          </option>
+                        )}
+                      </For>
+                    </NativeSelect.Field>
+                    <NativeSelect.Indicator />
+                  </NativeSelect.Root>
+                </Field.Root>
+                <Field.Root>
+                  <Field.Label>Current Participants</Field.Label>
+                  <NumberInput.Root defaultValue="1" unstyled spinOnPress={false} onValueChange={(e: { value: string; valueAsNumber: number }) => setFields((fields) => ({
+                    ...fields,
+                    currentParty: Number(e.valueAsNumber),
+                  }))}>
+                    <HStack gap="2">
+                      <NumberInput.DecrementTrigger asChild >
+                        <IconButton variant="outline" size="sm">
+                          <LuMinus />
+                        </IconButton>
+                      </NumberInput.DecrementTrigger>
+                      <NumberInput.ValueText textAlign="center" fontSize="lg" minW="3ch" />
+                      <NumberInput.IncrementTrigger asChild>
+                        <IconButton variant="outline" size="sm">
+                          <LuPlus />
+                        </IconButton>
+                      </NumberInput.IncrementTrigger>
+                    </HStack>
+                  </NumberInput.Root>
+                </Field.Root>
+
+                <Field.Root>
+                  <Field.Label>Max Participants</Field.Label>
+                  <NumberInput.Root defaultValue="4" unstyled spinOnPress={false} onValueChange={(e: { value: string; valueAsNumber: number }) => setFields((fields) => ({
+                    ...fields,
+                    maxParty: Number(e.valueAsNumber),
+                  }))}>
+                    <HStack gap="2">
+                      <NumberInput.DecrementTrigger asChild>
+                        <IconButton variant="outline" size="sm">
+                          <LuMinus />
+                        </IconButton>
+                      </NumberInput.DecrementTrigger>
+                      <NumberInput.ValueText textAlign="center" fontSize="lg" minW="3ch" />
+                      <NumberInput.IncrementTrigger asChild>
+                        <IconButton variant="outline" size="sm">
+                          <LuPlus />
+                        </IconButton>
+                      </NumberInput.IncrementTrigger>
+                    </HStack>
+                  </NumberInput.Root>
+                </Field.Root>
+              </Fieldset.Content>
+              {/* 'A new LFG Platform. Click here to [signup](https://localhost:3000).' */}
+              <Text>{fields.state}</Text>
+              <Text>{fields.status}</Text>
+              <Text>{fields.title}</Text>
+              <Text>{fields.details}</Text>
+              <Text>{fields.currentParty}</Text>
+              <Text>{fields.maxParty}</Text>
+              <Button alignSelf="flex-start" onClick={() => {
+                // action: string, message?: string, maxParticipants?: number, timestamp?: number, status?: string
+                client?.ActivityInfo({
+                  status: fields.status,
+                  state: fields.state,
+                  currentParty: fields.currentParty,
+                  maxParty: fields.maxParty,
+                  startStamp: fields.startStamp,
+                  endStamp: fields.endStamp,
+                })
+              }}>
+                Update Discord Activity
+              </Button>
+            </Fieldset.Root>
+          </Card.Root>
+          {loading && <p>Loading...</p>}
+          {stats && (
+            <SimpleGrid columns={1} gap={4} mt={4}>
+
+              {stats?.data?.map(([timestamp, info]: [string, any], index: number) => {
+                return <RankHistoryCard key={index} timestamp={timestamp} info={info} />
+              })}
+
+            </SimpleGrid >)
+          }
+          <Button
+            onClick={fetchStats}
+          >
+            Get Seasonal Stats
+          </Button>
 
 
-      <Button onClick={() => (console.log("Discord SDK is ready"))} >Log Me</Button >
+          <Button onClick={() => (console.log("Discord SDK is ready"))} >Log Me</Button >
+
+        </VStack >
+      </Container >
     </>
   )
 }
