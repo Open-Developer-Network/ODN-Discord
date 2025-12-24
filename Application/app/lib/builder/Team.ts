@@ -14,4 +14,7 @@ export class Team {
     this.members.push(userId);
     return true;
   }
+  get size(): number {
+      return this.members.length;
+    }
 }
