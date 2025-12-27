@@ -10,10 +10,11 @@ export default class DiscordClient {
     sessionSecret = crypto.randomUUID();
     joinSecret = crypto.randomUUID();
 
+
     constructor() {
         this.sdk = new DiscordSDK(process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID!)
     }
-    
+
     async init() {
         await this.sdk.ready()
         // this.sdk.subscribe("ACTIVITY_JOIN_REQUEST", ({ user }) => {
@@ -66,6 +67,17 @@ export default class DiscordClient {
             level: "log",
             message,
         });
+    }
+
+    async launch() {
+        const search = this.sdk._getSearch();
+        const params = new URLSearchParams(search);
+        return {
+            game: params.get("game"),
+            lfgId: params.get("lfgId"),
+            platform: params.get("platform"),
+            action: params.get("action")
+        };
     }
     // TO USE IN THE FUTURE
     // async joinActivity() {

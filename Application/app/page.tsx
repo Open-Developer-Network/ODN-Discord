@@ -22,6 +22,8 @@ import { RankHistoryCard } from "@/components/lib/games/r6/components/RankHistor
 import Privacy from "./(Pages)/privacy/page";
 import Terms from "./(Pages)/terms/page";
 
+
+import { getLaunchParams } from "@/app/lib/(Discord)/launch";
 export default function Home() {
 
   const current = useBreakpointValue({
@@ -62,10 +64,34 @@ export default function Home() {
       maxParty: 4,
     })
 
+  type LaunchContext = {
+    game: string | null;
+    lfgId: string | null;
+    platform: string | null;
+    action: string | null;
+  };
+  const [launch, setLaunch] = useState<LaunchContext | null>(null);
+  const [deepLinkParams, setDeepLinkParams] = useState({});
+
   useEffect(() => {
+    async function init() {
+      const instance = new DiscordClient();
+      instance.sdk.subscribe("DEEP_LINK" as any, ({ args }) => {
+        console.log("DEEP_LINK params:", args);
+        setDeepLinkParams(args || {});
+      });
+      await instance.init();   // runs sdk.ready()
+      setClient(instance);
+      const launchContext = await getLaunchParams();
+      setLaunch(launchContext);
+      console.log("Launch params:", launchContext);
+    }
+    init();
+
     const captureTime = Date.now() / 1000;
     setDefaultCaptureTime(captureTime)
   }, []);
+
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const discordID = 123456789012345678; // Replace with dynamic Discord ID as needed
@@ -91,6 +117,9 @@ export default function Home() {
   }
 
   const { open, onToggle } = useDisclosure()
+
+
+
   return (
     <>
       <Suspense fallback={null}>
@@ -118,6 +147,25 @@ export default function Home() {
                 </Stack>
               </VStack>
             </Center>
+
+            <Button onClick={() => {
+              const systemParams = Object.fromEntries(
+                new URLSearchParams(window.location.search));
+              const allParams = { ...systemParams, ...deepLinkParams, };
+              const debugUrl = "https://example.com/debug?" + new URLSearchParams(allParams).toString();
+              console.log("DEBUG URL:", debugUrl);
+              window.location.href = debugUrl;
+            }} >
+              Debug Launch Params </Button>
+            {launch &&
+              (<Box mt={6} p={4} bg="gray.800" borderRadius="md">
+                <Text fontWeight="bold">Launch Params</Text>
+                <Text>Game: {launch.game}</Text>
+                <Text>LFG ID: {launch.lfgId}</Text>
+                <Text>Platform: {launch.platform}</Text>
+                <Text>Action: {launch.action}</Text>
+              </Box>
+              )}
 
             <Card.Description textAlign={'center'} asChild>
               <Stack gap="4">
@@ -168,177 +216,8 @@ export default function Home() {
           </Card.Footer>
         </Card.Root>
       </Center>
+
     </>
   )
 }
-
-{/*
-  
-  < Button onClick={handleEnter}>Enter</Button >
-
-          <Button onClick={() => { client?.log("Hello from the Activity!") }}>
-            Discord Log
-          </Button>
-
-          <Card.Root maxW={'md'}>
-            <Fieldset.Root size="lg" maxW="md">
-              <Stack>
-                <Card.Title><Fieldset.Legend>Activity details</Fieldset.Legend></Card.Title>
-                <Card.Description><Fieldset.HelperText>
-                  Please provide your activity details below.
-                </Fieldset.HelperText></Card.Description>
-
-              </Stack>
-
-              <Fieldset.Content>
-                <Field.Root>
-                  <Field.Label>Title</Field.Label>
-                  <Input name="Title" value={fields.title}
-                    onChange={(e) =>
-                      setFields((fields) => ({
-                        ...fields,
-                        title: e.target.value,
-                      }))} />
-                </Field.Root>
-
-                <Field.Root>
-                  <Field.Label>Details</Field.Label>
-                  <Input name="Details" value={fields.details}
-                    onChange={(e) =>
-                      setFields((fields) => ({
-                        ...fields,
-                        details: e.target.value,
-                      }))} />
-                </Field.Root>
-
-                <Field.Root>
-                  <Field.Label>State</Field.Label>
-                  <NativeSelect.Root>
-                    <NativeSelect.Field name="State" onChange={(e) => setFields((fields) => ({
-                      ...fields,
-                      state: e.target.value,
-                    }))}>
-                      <For each={["Testing ODN", "Using ODN", "Developing ODN"]}>
-                        {(item) => (
-                          <option key={item} value={item} >
-                            {item}
-                          </option>
-                        )}
-                      </For>
-                    </NativeSelect.Field>
-                    <NativeSelect.Indicator />
-                  </NativeSelect.Root>
-                </Field.Root>
-                <Field.Root>
-                  <Field.Label>Status</Field.Label>
-                  <NativeSelect.Root>
-                    <NativeSelect.Field name="Status" onChange={(e) => setFields((fields) => ({
-                      ...fields,
-                      status: e.target.value,
-                    }))}>
-                      <For each={["Waiting in Queue", "Starting Soon", "Looking for group"]}>
-                        {(item) => (
-                          <option key={item} value={item} >
-                            {item}
-                          </option>
-                        )}
-                      </For>
-                    </NativeSelect.Field>
-                    <NativeSelect.Indicator />
-                  </NativeSelect.Root>
-                </Field.Root>
-                <Field.Root alignItems={'center'}>
-                  <Field.Label>Current Participants</Field.Label>
-                  <NumberInput.Root defaultValue="1" unstyled spinOnPress={false} onValueChange={(e: { value: string; valueAsNumber: number }) => setFields((fields) => ({
-                    ...fields,
-                    currentParty: Number(e.valueAsNumber),
-                  }))}>
-                    <HStack gap="2">
-                      <NumberInput.DecrementTrigger asChild >
-                        <IconButton variant="outline" size="sm">
-                          <LuMinus />
-                        </IconButton>
-                      </NumberInput.DecrementTrigger>
-                      <NumberInput.Input
-                        textAlign="center"
-                        fontSize="lg"
-                        maxW={'3vw'}
-                        autoFocus={false}
-                      /><NumberInput.IncrementTrigger asChild>
-                        <IconButton variant="outline" size="sm">
-                          <LuPlus />
-                        </IconButton>
-                      </NumberInput.IncrementTrigger>
-                    </HStack>
-                  </NumberInput.Root>
-                </Field.Root>
-
-                <Field.Root alignItems={'center'}>
-                  <Field.Label>Max Participants</Field.Label>
-                  <NumberInput.Root defaultValue="4" unstyled spinOnPress={false} onValueChange={(e: { value: string; valueAsNumber: number }) => setFields((fields) => ({
-                    ...fields,
-                    maxParty: Number(e.valueAsNumber),
-                  }))}>
-                    <HStack gap="2">
-                      <NumberInput.DecrementTrigger asChild>
-                        <IconButton variant="outline" size="sm">
-                          <LuMinus />
-                        </IconButton>
-                      </NumberInput.DecrementTrigger>
-                      <NumberInput.Input
-                        textAlign="center"
-                        fontSize="lg"
-                        maxW={'3vw'}
-                        autoFocus={false}
-                      /><NumberInput.IncrementTrigger asChild>
-                        <IconButton variant="outline" size="sm">
-                          <LuPlus />
-                        </IconButton>
-                      </NumberInput.IncrementTrigger>
-                    </HStack>
-                  </NumberInput.Root>
-                </Field.Root>
-              </Fieldset.Content>
-              {/* 'A new LFG Platform. Click here to [signup](https://localhost:3000).' */}
-//              <Text>{fields.state}</Text>
-//              <Text>{fields.status}</Text>
-//              <Text>{fields.title}</Text>
-//              <Text>{fields.details}</Text>
-//              <Text>{fields.currentParty}</Text>
-//              <Text>{fields.maxParty}</Text>
-//              <Button alignSelf="flex-start" onClick={() => {
-//                // action: string, message?: string, maxParticipants?: number, timestamp?: number, status?: string
-//                client?.ActivityInfo({
-//                  status: fields.status,
-//                  state: fields.state,
-//                  currentParty: fields.currentParty,
-//                  maxParty: fields.maxParty,
-//                  startStamp: fields.startStamp,
-//                  endStamp: fields.endStamp,
-//                })
-//              }}>
-//                Update Discord Activity
-//              </Button>
-//            </Fieldset.Root >
-//          </Card.Root >
-//  { loading && <p>Loading...</p>}
-//{
-//  stats && (
-//    <SimpleGrid columns={1} gap={4} mt={4}>
-//
-//      {stats?.data?.map(([timestamp, info]: [string, any], index: number) => {
-//        return <RankHistoryCard key={index} timestamp={timestamp} info={info} />
-//      })}
-//
-//    </SimpleGrid >)
-//}
-//          <Button
-//            onClick={fetchStats}
-//          >
-//            Get Seasonal Stats
-//          </Button>
-//
-//
-//          <Button onClick={() => (console.log("Discord SDK is ready"))} >Log Me</Button >
-//
 
