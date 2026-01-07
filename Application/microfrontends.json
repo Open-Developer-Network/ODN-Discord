@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/microfrontends.json",
+  "applications": {
+    "opendevelopernetwork": {
+      "development": {
+        "fallback": "odn-discord-816k.vercel.app"
+      }
+    }
+  }
+}
